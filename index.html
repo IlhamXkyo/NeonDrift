@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NIGHT DRIFT // 首都高 Midnight Expressway</title>
+  <meta name="description" content="Authentic 3D arcade highway drifting and traffic dodging game built with Three.js and Web Audio API." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- Three.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="game-canvas"></div>
+
+  <!-- Start / Main Menu Screen -->
+  <div id="screen-menu" class="screen-overlay active">
+    <div class="menu-container">
+      <div class="menu-header">
+        <span class="sub-tag">WANGAN MIDNIGHT // EXPRESSWAY RUN</span>
+        <h1 class="game-logo">NIGHT<span class="logo-accent">DRIFT</span></h1>
+        <p class="menu-tagline">Weave through midnight expressway traffic. Slide into corners. Survive the run.</p>
+      </div>
+
+      <!-- Car Selection Cards -->
+      <div class="car-selection">
+        <div class="section-title">SELECT MACHINE</div>
+        <div class="car-options">
+          <button class="car-opt active" data-car="panda">
+            <span class="car-badge">AE-86</span>
+            <span class="car-name">Panda White</span>
+            <div class="car-swatch" style="background: linear-gradient(135deg, #ffffff 60%, #111111 60%);"></div>
+          </button>
+          <button class="car-opt" data-car="midnight">
+            <span class="car-badge">R-34</span>
+            <span class="car-name">Midnight Blue</span>
+            <div class="car-swatch" style="background: #112244;"></div>
+          </button>
+          <button class="car-opt" data-car="cherry">
+            <span class="car-badge">FD-7</span>
+            <span class="car-name">Crimson Red</span>
+            <div class="car-swatch" style="background: #b91c1c;"></div>
+          </button>
+          <button class="car-opt" data-car="gunmetal">
+            <span class="car-badge">S-15</span>
+            <span class="car-name">Gunmetal Grey</span>
+            <div class="car-swatch" style="background: #374151;"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <button id="btn-start" class="btn-primary">
+        <span>ENGAGE IGNITION [ENTER]</span>
+      </button>
+
+      <!-- Key controls guide -->
+      <div class="controls-guide">
+        <div class="ctrl-item"><kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd> Steer</div>
+        <div class="ctrl-item"><kbd>SPACE</kbd> Handbrake Drift</div>
+        <div class="ctrl-item"><kbd>W</kbd> or <kbd>SHIFT</kbd> Nitro Boost</div>
+        <div class="ctrl-item"><kbd>M</kbd> Radio Mute</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Game Authentic Sports Car HUD -->
+  <div id="hud" class="hud-overlay">
+    <!-- Top Telemetry & Score -->
+    <div class="hud-top">
+      <div class="hud-stat-box">
+        <span class="stat-label">SCORE</span>
+        <span id="hud-score" class="stat-value">0</span>
+      </div>
+
+      <div class="hud-center-alert" id="hud-alert-box">
+        <span id="hud-alert-text"></span>
+      </div>
+
+      <div class="hud-stat-box right">
+        <span class="stat-label">DISTANCE</span>
+        <span id="hud-distance" class="stat-value">0.0 <small>km</small></span>
+      </div>
+    </div>
+
+    <!-- Active Drift Combo Bar -->
+    <div id="drift-bar-container" class="drift-indicator">
+      <div class="drift-header">
+        <span class="drift-label">DRIFT SLIDE</span>
+        <span id="drift-mult" class="drift-mult">x1.0</span>
+      </div>
+      <div class="drift-progress-bg">
+        <div id="drift-progress" class="drift-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Dashboard Cluster (Authentic Instrument Gauges) -->
+    <div class="hud-bottom">
+      <!-- In-Car Radio Widget -->
+      <div class="radio-widget">
+        <div class="cassette-label">FM 88.4 // MIDNIGHT LO-FI</div>
+        <div class="radio-eq">
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+          <div class="eq-bar"></div>
+        </div>
+        <button id="btn-radio-toggle" class="btn-radio-icon" title="Toggle Radio">🔊</button>
+      </div>
+
+      <!-- Tachometer & Speedometer -->
+      <div class="instrument-cluster">
+        <div class="gauge-speed">
+          <span id="hud-speed" class="speed-num">0</span>
+          <span class="speed-unit">KM/H</span>
+        </div>
+
+        <div class="gauge-gear">
+          <span class="gear-label">GEAR</span>
+          <span id="hud-gear" class="gear-num">1</span>
+        </div>
+
+        <!-- Nitro Gauge -->
+        <div class="nitro-cluster">
+          <div class="nitro-label-row">
+            <span>NOS BOOST</span>
+            <span id="nitro-pct">100%</span>
+          </div>
+          <div class="nitro-track">
+            <div id="nitro-fill" class="nitro-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Touch Controls -->
+  <div id="touch-controls" class="touch-controls">
+    <div class="touch-left">
+      <button id="touch-left" class="touch-btn">◀</button>
+      <button id="touch-right" class="touch-btn">▶</button>
+    </div>
+    <div class="touch-right">
+      <button id="touch-drift" class="touch-btn action drift">DRIFT</button>
+      <button id="touch-boost" class="touch-btn action boost">NOS</button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="screen-gameover" class="screen-overlay">
+    <div class="gameover-card">
+      <div class="crash-banner">RUN TERMINATED</div>
+      <h2 class="gameover-title">EXPRESSWAY CRASH</h2>
+      
+      <div class="stats-table">
+        <div class="stat-row">
+          <span>Final Score</span>
+          <strong id="go-score">0</strong>
+        </div>
+        <div class="stat-row">
+          <span>Distance Traveled</span>
+          <strong id="go-distance">0.0 km</strong>
+        </div>
+        <div class="stat-row">
+          <span>Longest Drift</span>
+          <strong id="go-drift">0 pts</strong>
+        </div>
+        <div class="stat-row highlight">
+          <span>Best Record</span>
+          <strong id="go-best">0</strong>
+        </div>
+      </div>
+
+      <button id="btn-retry" class="btn-primary">
+        <span>RESTART RUN [ENTER]</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="soundFX.js"></script>
+  <script src="car.js"></script>
+  <script src="world.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
