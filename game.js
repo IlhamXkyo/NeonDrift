@@ -110,14 +110,17 @@ class GameEngine {
       keys[e.code] = false;
     });
 
+    const touchState = { steer: 0, drift: false, boost: false };
+
     this.pollKeys = () => {
       let steer = 0;
       if (keys['KeyA'] || keys['ArrowLeft']) steer -= 1;
       if (keys['KeyD'] || keys['ArrowRight']) steer += 1;
+      if (touchState.steer !== 0) steer = touchState.steer;
 
       this.inputs.steer = steer;
-      this.inputs.drift = (keys['Space'] || keys['KeyS'] || keys['ArrowDown']);
-      this.inputs.boost = (keys['KeyW'] || keys['ShiftLeft'] || keys['ShiftRight'] || keys['ArrowUp']);
+      this.inputs.drift = (keys['Space'] || keys['KeyS'] || keys['ArrowDown']) || touchState.drift;
+      this.inputs.boost = (keys['KeyW'] || keys['ShiftLeft'] || keys['ShiftRight'] || keys['ArrowUp']) || touchState.boost;
     };
 
     // Touch controls for mobile
@@ -132,10 +135,10 @@ class GameEngine {
       elem.addEventListener('touchend', (e) => { e.preventDefault(); onRelease(); }, { passive: false });
     };
 
-    bindTouch(btnLeft, () => { this.inputs.steer = -1; }, () => { this.inputs.steer = 0; });
-    bindTouch(btnRight, () => { this.inputs.steer = 1; }, () => { this.inputs.steer = 0; });
-    bindTouch(btnDrift, () => { this.inputs.drift = true; }, () => { this.inputs.drift = false; });
-    bindTouch(btnBoost, () => { this.inputs.boost = true; }, () => { this.inputs.boost = false; });
+    bindTouch(btnLeft, () => { touchState.steer = -1; }, () => { if (touchState.steer === -1) touchState.steer = 0; });
+    bindTouch(btnRight, () => { touchState.steer = 1; }, () => { if (touchState.steer === 1) touchState.steer = 0; });
+    bindTouch(btnDrift, () => { touchState.drift = true; }, () => { touchState.drift = false; });
+    bindTouch(btnBoost, () => { touchState.boost = true; }, () => { touchState.boost = false; });
   }
 
   setupUI() {
